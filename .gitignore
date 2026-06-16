@@ -1,0 +1,46 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.pytest_cache/
+.mypy_cache/
+
+# FastAPI / logs
+*.log
+
+# Flutter / Dart
+mobile-lens/.dart_tool/
+mobile-lens/build/
+mobile-lens/.flutter-plugins
+mobile-lens/.flutter-plugins-dependencies
+mobile-lens/*.iml
+
+# Android / iOS local
+mobile-lens/android/.gradle/
+mobile-lens/ios/Pods/
+mobile-lens/ios/.symlinks/
+
+# Node / React
+frontend-react/node_modules/
+frontend-react/dist/
+frontend-react/build/
+
+# Java / Spring Boot
+backend-springboot/target/
+backend-springboot/.gradle/
+backend-springboot/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
