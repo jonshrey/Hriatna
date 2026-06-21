@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
 import { useState } from "react";
+import type { AnalysisMode, AwarenessResult, HistoryItem } from "@/types";
 
 export default function AppShell() {
   const [input, setInput] = useState("");
-  const [result, setResult] = useState("");
-  const [history, setHistory] = useState<string[]>([]);
+  const [selectedMode, setSelectedMode] = useState<AnalysisMode>("auto");
+  const [result, setResult] = useState<AwarenessResult | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   return (
     <div className="grid grid-cols-[260px_1fr_300px] h-screen w-screen overflow-hidden font-sans">
@@ -25,6 +26,16 @@ export default function AppShell() {
               Settings
             </a>
           </nav>
+          <section className="mt-6">{history.length > 0 && <h3 className="text-sm font-semibold mb-2">History</h3>}
+          <div className="space-y-1">
+            {history.map((item) => (
+              <div key={item.id} className="p-2 bg-slate-800 rounded">
+                <p className="text-sm">{item.input}</p>
+                <p className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+          </section>
         </div>
         <div className="text-sm text-slate-400">User Profile</div>
       </aside>
@@ -37,7 +48,19 @@ export default function AppShell() {
           </h1>
         </header>
         <section className="bg-white p-6 rounded-lg shadow-sm min-h-[1000px]">
-          <p className="text-slate-600">
+          <div className="text-slate-600">
+            <select
+              value={selectedMode}
+              onChange={(e) => setSelectedMode(e.target.value as AnalysisMode)}
+              className="border p-2 rounded mb-4"
+            >
+              <option value="auto">Auto</option>
+              <option value="surrounding">Surrounding</option>
+              <option value="screen">Screen</option>
+              <option value="document">Document</option>
+              <option value="code">Code</option>
+              <option value="sre">SRE</option>
+            </select>
             <input
               type="text"
               value={input}
@@ -51,7 +74,7 @@ export default function AppShell() {
             >
               {isLoading ? "Analyzing..." : "Submit"}
             </button>
-          </p>
+          </div>
         </section>
       </main>
 
@@ -62,7 +85,17 @@ export default function AppShell() {
         </h3>
 
         {result ? (
-          <div className="p-4 bg-slate-50 rounded text-slate-700">{result}</div>
+          <div className="p-4 bg-slate-50 rounded text-slate-700">
+            <p>
+              <strong>Detected Intent:</strong> {result.detectedIntent}
+            </p>
+            <p>
+              <strong>Scene Summary:</strong> {result.sceneSummary}
+            </p>
+            <p>
+              <strong>Explanation:</strong> {result.explanation}
+            </p>
+          </div>
         ) : (
           <p className="text-sm text-slate-500">No analysis yet.</p>
         )}
@@ -78,11 +111,30 @@ export default function AppShell() {
     }
 
     setIsLoading(true);
+    const mode: AnalysisMode =
+      selectedMode === "auto" ? "surrounding" : selectedMode;
 
-    const mockResult = `Mock analysis: "${trimmedInput}" looks like something Hriatna can analyze.`;
+    const mockResult: AwarenessResult = {
+      detectedIntent: "unknown",
+      sceneSummary: `Summary for "${trimmedInput}"`,
+      explanation: `Explanation for "${trimmedInput}"`,
+      observations: [],
+      suggestedActions: [],
+      memoryUpdate: "",
+      confidence: 0.8,
+    };
 
     setResult(mockResult);
-    setHistory((prevHistory) => [...prevHistory, trimmedInput]);
+    setHistory((prevHistory) => [
+      {
+        id: Date.now().toString(),
+        input: trimmedInput,
+        mode: selectedMode,
+        summary: mockResult.sceneSummary,
+        createdAt: new Date().toISOString(),
+      },
+      ...prevHistory,
+    ]);
 
     setInput("");
     setIsLoading(false);
