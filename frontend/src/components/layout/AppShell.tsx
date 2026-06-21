@@ -9,6 +9,7 @@ export default function AppShell() {
   const [result, setResult] = useState<AwarenessResult | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionMemory, setSessionMemory] = useState<string[]>([]);
   return (
     <div className="grid grid-cols-[260px_1fr_300px] h-screen w-screen overflow-hidden font-sans">
       {/* 1. LEFT SIDEBAR */}
@@ -26,15 +27,20 @@ export default function AppShell() {
               Settings
             </a>
           </nav>
-          <section className="mt-6">{history.length > 0 && <h3 className="text-sm font-semibold mb-2">History</h3>}
-          <div className="space-y-1">
-            {history.map((item) => (
-              <div key={item.id} className="p-2 bg-slate-800 rounded">
-                <p className="text-sm">{item.input}</p>
-                <p className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
+          <section className="mt-6">
+            {history.length > 0 && (
+              <h3 className="text-sm font-semibold mb-2">History</h3>
+            )}
+            <div className="space-y-1">
+              {history.map((item) => (
+                <div key={item.id} className="p-2 bg-slate-800 rounded">
+                  <p className="text-sm">{item.input}</p>
+                  <p className="text-xs text-slate-400">
+                    {new Date(item.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
         <div className="text-sm text-slate-400">User Profile</div>
@@ -95,6 +101,46 @@ export default function AppShell() {
             <p>
               <strong>Explanation:</strong> {result.explanation}
             </p>
+            <p>
+              <strong>Confidence:</strong>{" "}
+              {(result.confidence * 100).toFixed(1)}%
+            </p>
+            <section className="mt-4">
+              {result.observations.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Observations:</h4>
+                  <ul className="list-disc list-inside">
+                    {result.observations.map((obs) => (
+                      <li key={obs.id} className="text-sm">
+                        <strong>{obs.label}:</strong> {obs.description}{" "}
+                        (Confidence: {(obs.confidence * 100).toFixed(1)}%)
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+            <section className="mt-4">
+              {result.suggestedActions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Suggested Actions:</h4>
+                  <ul className="list-disc list-inside">
+                    {result.suggestedActions.map((action) => (
+                      <li key={action.id} className="text-sm">
+                        <strong>{action.title}:</strong> {action.description}{" "}
+                        (Priority: {action.priority})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+            <section className="mt-4">
+              <h4 className="font-semibold mb-2">Memory Update:</h4>
+              <p className="text-sm bg-white p-2 rounded border border-slate-200">
+                {result.memoryUpdate}
+              </p>
+            </section>
           </div>
         ) : (
           <p className="text-sm text-slate-500">No analysis yet.</p>
@@ -115,12 +161,40 @@ export default function AppShell() {
       selectedMode === "auto" ? "surrounding" : selectedMode;
 
     const mockResult: AwarenessResult = {
-      detectedIntent: "unknown",
+      detectedIntent: mode,
       sceneSummary: `Summary for "${trimmedInput}"`,
       explanation: `Explanation for "${trimmedInput}"`,
-      observations: [],
-      suggestedActions: [],
-      memoryUpdate: "",
+      observations: [
+        {
+          id: "1",
+          type: "object",
+          label: "this right here",
+          description: "A description of the observed object",
+          confidence: 0.8,
+        },
+        {
+          id: "2",
+          type: "text",
+          label: "some text",
+          description: "A description of the observed text",
+          confidence: 0.7,
+        },
+      ],
+      suggestedActions: [
+        {
+          id: "1",
+          title: "Suggested Action 1",
+          description: "Description for suggested action 1",
+          priority: "medium",
+        },
+        {
+          id: "2",
+          title: "Suggested Action 2",
+          description: "Description for suggested action 2",
+          priority: "high",
+        },
+      ],
+      memoryUpdate: `Remembered context from this session: ${trimmedInput}`,
       confidence: 0.8,
     };
 
@@ -129,12 +203,14 @@ export default function AppShell() {
       {
         id: Date.now().toString(),
         input: trimmedInput,
-        mode: selectedMode,
+        mode: mode,
         summary: mockResult.sceneSummary,
         createdAt: new Date().toISOString(),
       },
       ...prevHistory,
     ]);
+
+    setSessionMemory((prevMemory) => [mockResult.memoryUpdate, ...prevMemory]);
 
     setInput("");
     setIsLoading(false);
