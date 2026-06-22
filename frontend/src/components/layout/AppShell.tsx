@@ -5,7 +5,7 @@ import type { AnalysisMode, AwarenessResult, HistoryItem } from "@/types";
 import ResultPanel from "./ResultPanel";
 import Sidebar from "./Sidebar";
 import MainWorkspace from "./MainWorkspace";
-import { createMockAwarenessResult } from "./createMockAwarenessResult";
+import { analyzeAwareness } from "@/lib/api";
 
 export default function AppShell() {
   const [input, setInput] = useState("");
@@ -14,6 +14,7 @@ export default function AppShell() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionMemory, setSessionMemory] = useState<string[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   return (
     <div className="grid grid-cols-[260px_1fr_300px] h-screen w-screen overflow-hidden font-sans">
       {/* 1. LEFT SIDEBAR */}
@@ -23,16 +24,18 @@ export default function AppShell() {
         input={input}
         selectedMode={selectedMode}
         isLoading={isLoading}
+        errorMessage={errorMessage}
         onInputChange={setInput}
         onModeChange={setSelectedMode}
         onAnalyze={buttonClick}
+
       />
       {/* 3. RIGHT PANEL */}
-      <ResultPanel result={result} sessionMemory={sessionMemory} />{" "}
+      <ResultPanel result={result} sessionMemory={sessionMemory} />
     </div>
   );
 
-  function buttonClick() {
+  async function buttonClick() {
     const trimmedInput = input.trim();
 
     if (trimmedInput.length === 0) {
@@ -40,26 +43,39 @@ export default function AppShell() {
     }
 
     setIsLoading(true);
-    const mode: AnalysisMode =
-      selectedMode === "auto" ? "surrounding" : selectedMode;
+    setErrorMessage(null);
 
-    const mockResult = createMockAwarenessResult(trimmedInput, mode);
+    try {
+      const mode: AnalysisMode =
+        selectedMode === "auto" ? "surrounding" : selectedMode;
 
-    setResult(mockResult);
-    setHistory((prevHistory) => [
-      {
-        id: Date.now().toString(),
-        input: trimmedInput,
-        mode: mode,
-        summary: mockResult.sceneSummary,
-        createdAt: new Date().toISOString(),
-      },
-      ...prevHistory,
-    ]);
+      const analysisResult = await analyzeAwareness(trimmedInput, mode);
 
-    setSessionMemory((prevMemory) => [mockResult.memoryUpdate, ...prevMemory]);
+      setResult(analysisResult);
 
-    setInput("");
-    setIsLoading(false);
+      setHistory((prevHistory) => [
+        {
+          id: Date.now().toString(),
+          input: trimmedInput,
+          mode: mode,
+          summary: analysisResult.sceneSummary,
+          createdAt: new Date().toISOString(),
+        },
+        ...prevHistory,
+      ]);
+
+      setSessionMemory((prevMemory) => [
+        analysisResult.memoryUpdate,
+        ...prevMemory,
+      ]);
+
+      setInput("");
+    } catch (error) {
+      console.error("Failed to analyze awareness:", error);
+     setErrorMessage("Something went wrong while analyzing. Please try again.");
+
+    } finally {
+      setIsLoading(false);
+    }
   }
 }
