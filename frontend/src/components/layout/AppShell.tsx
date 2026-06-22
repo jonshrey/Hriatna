@@ -28,10 +28,9 @@ export default function AppShell() {
         onInputChange={setInput}
         onModeChange={setSelectedMode}
         onAnalyze={buttonClick}
-
       />
       {/* 3. RIGHT PANEL */}
-      <ResultPanel result={result} sessionMemory={sessionMemory} />
+      <ResultPanel result={result} sessionMemory={sessionMemory} isLoading={isLoading} />
     </div>
   );
 
@@ -56,7 +55,7 @@ export default function AppShell() {
       setHistory((prevHistory) => [
         {
           id: Date.now().toString(),
-          input: trimmedInput,
+          input: createHistoryTitle(trimmedInput),
           mode: mode,
           summary: analysisResult.sceneSummary,
           createdAt: new Date().toISOString(),
@@ -72,10 +71,14 @@ export default function AppShell() {
       setInput("");
     } catch (error) {
       console.error("Failed to analyze awareness:", error);
-     setErrorMessage("Something went wrong while analyzing. Please try again.");
-
+      setErrorMessage(
+        "Something went wrong while analyzing. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
+  }
+  function createHistoryTitle(input: string) {
+    return input.length > 45 ? `${input.slice(0, 45)}...` : input;
   }
 }

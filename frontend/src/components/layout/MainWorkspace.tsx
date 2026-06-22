@@ -45,6 +45,7 @@ export default function MainWorkspace({
           />
           <button
             onClick={onAnalyze}
+            disabled={isLoading}
             className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
           >
             {isLoading ? "Analyzing..." : "Submit"}
