@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { AnalysisMode, AwarenessResult, HistoryItem, inputType } from "@/types";
+import type {
+  AnalysisMode,
+  AwarenessResult,
+  HistoryItem,
+  InputType,
+} from "@/types";
 import ResultPanel from "./ResultPanel";
 import Sidebar from "./Sidebar";
 import MainWorkspace from "./MainWorkspace";
@@ -15,7 +20,10 @@ export default function AppShell() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionMemory, setSessionMemory] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const[inputType, setInputType] = useState<inputType>("text");
+  const [latestCameraFrame, setLatestCameraFrame] = useState<string | null>(
+    null,
+  );
+  const [inputType, setInputType] = useState<InputType>("text");
   return (
     <div className="grid grid-cols-[260px_1fr_300px] h-screen w-screen overflow-hidden font-sans">
       {/* 1. LEFT SIDEBAR */}
@@ -30,15 +38,21 @@ export default function AppShell() {
         onInputChange={setInput}
         onModeChange={setSelectedMode}
         onAnalyze={buttonClick}
-        oninputTypeChange={setInputType}
+        onInputTypeChange={setInputType}
+        onCameraFrameCapture={setLatestCameraFrame}
       />
       {/* 3. RIGHT PANEL */}
-      <ResultPanel result={result} sessionMemory={sessionMemory} isLoading={isLoading} />
+      <ResultPanel
+        result={result}
+        sessionMemory={sessionMemory}
+        isLoading={isLoading}
+      />
     </div>
   );
 
   async function buttonClick() {
     const trimmedInput = input.trim();
+    console.log("Latest camera frame exists:", Boolean(latestCameraFrame));
 
     if (trimmedInput.length === 0) {
       return;
@@ -51,8 +65,12 @@ export default function AppShell() {
       const mode: AnalysisMode =
         selectedMode === "auto" ? "surrounding" : selectedMode;
 
-      const analysisResult = await analyzeAwareness(trimmedInput, mode);
-
+      const analysisResult = await analyzeAwareness({
+        input: trimmedInput,
+        mode,
+        inputType,
+        latestCameraFrame,
+      });
       setResult(analysisResult);
 
       setHistory((prevHistory) => [

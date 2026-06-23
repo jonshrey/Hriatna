@@ -1,4 +1,6 @@
-import type { AnalysisMode, inputType } from "@/types";
+import type { AnalysisMode, InputType } from "@/types";
+import CameraInput from "@/components/inputs/CameraInput";
+
 const inputSourceOptions = [
   {
     type: "text",
@@ -16,7 +18,7 @@ const inputSourceOptions = [
     description: "Upload an image",
   },
 ] satisfies {
-  type: inputType;
+  type: InputType;
   label: string;
   description: string;
 }[];
@@ -30,17 +32,19 @@ export default function MainWorkspace({
   onInputChange,
   onModeChange,
   onAnalyze,
-  oninputTypeChange,
+  onInputTypeChange,
+  onCameraFrameCapture,
 }: {
   input: string;
-  inputType: inputType;
+  inputType: InputType;
   selectedMode: AnalysisMode;
   isLoading: boolean;
   errorMessage: string | null;
   onInputChange: (value: string) => void;
   onModeChange: (mode: AnalysisMode) => void;
   onAnalyze: () => void;
-  oninputTypeChange: (type: inputType) => void;
+  onInputTypeChange: (type: InputType) => void;
+  onCameraFrameCapture: (frameDataUrl: string) => void;
 }) {
   const styleMap: Record<AnalysisMode, string> = {
     auto: "border p-3 rounded w-full mb-4 min-h-[120px] resize-none bg-gray-50",
@@ -77,10 +81,39 @@ export default function MainWorkspace({
     sre: "Use this for logs, alerts, incidents, and root-cause analysis.",
   };
 
+  function renderInputArea() {
+    if (inputType === "text") {
+      return (
+        <textarea
+          value={input}
+          onChange={(e) => onInputChange(e.target.value)}
+          className={styleMap[selectedMode]}
+          placeholder={placeholderMap[selectedMode]}
+        />
+      );
+    }
+
+    if (inputType === "camera") {
+      return <CameraInput onFrameCapture={onCameraFrameCapture} />;
+    }
+
+    const selectedSource = inputSourceOptions.find(
+      (option) => option.type === inputType
+    );
+
+    return (
+      <div className="mb-4 flex min-h-[220px] items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
+        {selectedSource?.label} input will appear here
+      </div>
+    );
+  }
+
   return (
     <main className="bg-slate-50 p-6 overflow-y-auto">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Context Awareness</h1>
+        <h1 className="text-2xl font-bold text-slate-800">
+          Context Awareness
+        </h1>
       </header>
 
       <section className="bg-white p-6 rounded-lg shadow-sm min-h-[1000px]">
@@ -97,11 +130,10 @@ export default function MainWorkspace({
             <option value="code">Code</option>
             <option value="sre">SRE</option>
           </select>
+
           <p className="mb-4 text-sm text-slate-500">
             {modeDescriptionMap[selectedMode]}
           </p>
-
-          {renderInputArea()}
 
           <div className="mb-4">
             <p className="mb-2 text-sm font-medium text-slate-700">
@@ -113,7 +145,7 @@ export default function MainWorkspace({
                 <button
                   key={option.type}
                   type="button"
-                  onClick={() => oninputTypeChange(option.type)}
+                  onClick={() => onInputTypeChange(option.type)}
                   className={
                     inputType === option.type
                       ? "rounded bg-slate-900 px-3 py-2 text-sm text-white"
@@ -125,6 +157,8 @@ export default function MainWorkspace({
               ))}
             </div>
           </div>
+
+          {renderInputArea()}
 
           <button
             onClick={onAnalyze}
@@ -141,27 +175,4 @@ export default function MainWorkspace({
       </section>
     </main>
   );
-
-  function renderInputArea() {
-    if (inputType === "text") {
-      return (
-        <textarea
-          value={input}
-          onChange={(e) => onInputChange(e.target.value)}
-          className={styleMap[selectedMode]}
-          placeholder={placeholderMap[selectedMode]}
-        />
-      );
-    }
-
-    const selectedSource = inputSourceOptions.find(
-      (option) => option.type === inputType,
-    );
-
-    return (
-      <div className="mb-4 flex min-h-[220px] items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
-        {selectedSource?.label} input will appear here
-      </div>
-    );
-  }
 }
