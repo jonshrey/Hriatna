@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AnalysisMode, AwarenessResult, HistoryItem } from "@/types";
+import type { AnalysisMode, AwarenessResult, HistoryItem, inputType } from "@/types";
 import ResultPanel from "./ResultPanel";
 import Sidebar from "./Sidebar";
 import MainWorkspace from "./MainWorkspace";
@@ -15,6 +15,7 @@ export default function AppShell() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionMemory, setSessionMemory] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const[inputType, setInputType] = useState<inputType>("text");
   return (
     <div className="grid grid-cols-[260px_1fr_300px] h-screen w-screen overflow-hidden font-sans">
       {/* 1. LEFT SIDEBAR */}
@@ -22,12 +23,14 @@ export default function AppShell() {
       {/* 2. CENTER MAIN SCREEN */}
       <MainWorkspace
         input={input}
+        inputType={inputType}
         selectedMode={selectedMode}
         isLoading={isLoading}
         errorMessage={errorMessage}
         onInputChange={setInput}
         onModeChange={setSelectedMode}
         onAnalyze={buttonClick}
+        oninputTypeChange={setInputType}
       />
       {/* 3. RIGHT PANEL */}
       <ResultPanel result={result} sessionMemory={sessionMemory} isLoading={isLoading} />

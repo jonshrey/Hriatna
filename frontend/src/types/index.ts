@@ -14,6 +14,8 @@ export type ObservationType =
   | "task"
   | "unknown";
 
+export type inputType = "text" | "image" | "document" | "code" | "log" | "camera" | "screenshot" | "other";  
+
 export interface Observation {
   id: string;
   type: ObservationType;
@@ -46,3 +48,4 @@ export interface HistoryItem {
   summary: string;
   createdAt: string;
 }
+
