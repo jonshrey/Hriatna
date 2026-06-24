@@ -20,9 +20,7 @@ export default function AppShell() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionMemory, setSessionMemory] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [latestCameraFrame, setLatestCameraFrame] = useState<string | null>(
-    null,
-  );
+  const [recentCameraFrames, setRecentCameraFrames] = useState<string[]>([]);
   const [inputType, setInputType] = useState<InputType>("text");
   return (
     <div className="grid grid-cols-[260px_1fr_300px] h-screen w-screen overflow-hidden font-sans">
@@ -39,7 +37,7 @@ export default function AppShell() {
         onModeChange={setSelectedMode}
         onAnalyze={buttonClick}
         onInputTypeChange={setInputType}
-        onCameraFrameCapture={setLatestCameraFrame}
+        onCameraFrameCapture={handleCameraFrameCapture}
       />
       {/* 3. RIGHT PANEL */}
       <ResultPanel
@@ -52,7 +50,7 @@ export default function AppShell() {
 
   async function buttonClick() {
     const trimmedInput = input.trim();
-    console.log("Latest camera frame exists:", Boolean(latestCameraFrame));
+    console.log("Recent camera frames exist:", Boolean(recentCameraFrames.length));
 
     if (trimmedInput.length === 0) {
       return;
@@ -69,7 +67,7 @@ export default function AppShell() {
         input: trimmedInput,
         mode,
         inputType,
-        latestCameraFrame,
+        recentCameraFrames: recentCameraFrames.length > 0 ? recentCameraFrames : undefined,
       });
       setResult(analysisResult);
 
@@ -102,4 +100,10 @@ export default function AppShell() {
   function createHistoryTitle(input: string) {
     return input.length > 45 ? `${input.slice(0, 45)}...` : input;
   }
+  function handleCameraFrameCapture(frameDataUrl: string) {
+  setRecentCameraFrames((prevFrames) => [
+    frameDataUrl,
+    ...prevFrames,
+  ].slice(0, 5));
+}
 }

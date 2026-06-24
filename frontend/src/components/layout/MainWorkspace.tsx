@@ -98,7 +98,7 @@ export default function MainWorkspace({
     }
 
     const selectedSource = inputSourceOptions.find(
-      (option) => option.type === inputType
+      (option) => option.type === inputType,
     );
 
     return (
@@ -111,9 +111,7 @@ export default function MainWorkspace({
   return (
     <main className="bg-slate-50 p-6 overflow-y-auto">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">
-          Context Awareness
-        </h1>
+        <h1 className="text-2xl font-bold text-slate-800">Context Awareness</h1>
       </header>
 
       <section className="bg-white p-6 rounded-lg shadow-sm min-h-[1000px]">

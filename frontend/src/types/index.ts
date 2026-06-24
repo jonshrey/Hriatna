@@ -14,7 +14,15 @@ export type ObservationType =
   | "task"
   | "unknown";
 
-export type InputType = "text" | "image" | "document" | "code" | "log" | "camera" | "screenshot" | "other";  
+export type InputType =
+  | "text"
+  | "image"
+  | "document"
+  | "code"
+  | "log"
+  | "camera"
+  | "screenshot"
+  | "other";
 
 export interface Observation {
   id: string;
@@ -41,6 +49,13 @@ export interface AwarenessResult {
   confidence: number;
 }
 
+export interface AnalyzeAwarenessRequest {
+  input: string;
+  mode: AnalysisMode;
+  inputType: InputType;
+  recentCameraFrames?: string[];
+}
+
 export interface HistoryItem {
   id: string;
   input: string;
@@ -48,4 +63,3 @@ export interface HistoryItem {
   summary: string;
   createdAt: string;
 }
-
