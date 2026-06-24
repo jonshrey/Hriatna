@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import speakText, { stopSpeaking } from "@/lib/speech";
 import type {
   AnalysisMode,
   AwarenessResult,
@@ -51,7 +52,10 @@ export default function AppShell() {
 
   async function buttonClick() {
     const trimmedInput = input.trim();
-    console.log("Recent camera frames exist:", Boolean(recentCameraFrames.length));
+    console.log(
+      "Recent camera frames exist:",
+      Boolean(recentCameraFrames.length),
+    );
 
     if (trimmedInput.length === 0) {
       return;
@@ -68,10 +72,14 @@ export default function AppShell() {
         input: trimmedInput,
         mode,
         inputType,
-        recentCameraFrames: recentCameraFrames.length > 0 ? recentCameraFrames : undefined,
+        recentCameraFrames:
+          recentCameraFrames.length > 0 ? recentCameraFrames : undefined,
       });
       setResult(analysisResult);
 
+      speakText(
+        `${analysisResult.sceneSummary}. ${analysisResult.explanation}`,
+      );
       setHistory((prevHistory) => [
         {
           id: Date.now().toString(),
@@ -102,9 +110,8 @@ export default function AppShell() {
     return input.length > 45 ? `${input.slice(0, 45)}...` : input;
   }
   function handleCameraFrameCapture(frameDataUrl: string) {
-  setRecentCameraFrames((prevFrames) => [
-    frameDataUrl,
-    ...prevFrames,
-  ].slice(0, 5));
-}
+    setRecentCameraFrames((prevFrames) =>
+      [frameDataUrl, ...prevFrames].slice(0, 5),
+    );
+  }
 }
