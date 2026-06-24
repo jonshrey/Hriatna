@@ -37,6 +37,7 @@ export default function AppShell() {
         onModeChange={setSelectedMode}
         onAnalyze={buttonClick}
         onInputTypeChange={setInputType}
+        onTranscriptChange={(transcript) => setInput(transcript)}
         onCameraFrameCapture={handleCameraFrameCapture}
       />
       {/* 3. RIGHT PANEL */}
