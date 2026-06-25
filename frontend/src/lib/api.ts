@@ -11,72 +11,37 @@ export async function analyzeAwareness({
   inputType,
   recentCameraFrames,
 }: AnalyzeAwarenessRequest): Promise<AwarenessResult> {
-  await sleep(1000);
+  const response = await fetch("http://localhost:8080/api/ask", {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain",
+    },
+    body: input,
+  });
 
-  if (input.toLowerCase().includes("fail")) {
-    throw new Error("Mock analysis failure");
+  if (!response.ok) {
+    throw new Error("Failed to get answer from backend");
   }
 
-  const result = createMockAwarenessResult(input, mode);
+  const backendAnswer = await response.text();
 
-  if (inputType === "camera") {
-    const frameCount = recentCameraFrames?.length ?? 0;
-
-    if (frameCount === 0) {
-      return {
-        ...result,
-        sceneSummary:
-          "Camera mode selected, but no visual context is available yet.",
-        explanation:
-          "Start the camera and wait a few seconds so Hriatna can collect recent visual frames before analyzing your question.",
-        observations: [],
-        suggestedActions: [
-          {
-            id: "start-camera",
-            title: "Start camera",
-            description:
-              "Turn on the camera and wait for recent frames to be captured.",
-            priority: "high",
-          },
-        ],
-        memoryUpdate: `Camera question asked without visual context: ${input}`,
-        confidence: 0.3,
-      };
-    }
-
-    return {
-      ...result,
-      sceneSummary: `Using recent visual context from ${frameCount} camera frame${
-        frameCount > 1 ? "s" : ""
-      } for: "${input}"`,
-      explanation:
-        "Hriatna is combining your question with a short rolling buffer of recent camera frames. This is currently mocked, but the frontend flow is ready for a vision backend.",
-      observations: [
-        {
-          id: "recent-camera-context",
-          type: "environment",
-          label: "Recent camera context",
-          description: `${frameCount} recent camera frame${
-            frameCount > 1 ? "s were" : " was"
-          } available during analysis.`,
-          confidence: 0.9,
-        },
-      ],
-      suggestedActions: [
-        {
-          id: "ask-visual-follow-up",
-          title: "Ask a visual follow-up",
-          description:
-            "Ask what changed, what object was visible earlier, or what action to take next.",
-          priority: "medium",
-        },
-      ],
-      memoryUpdate: `Used recent camera context from ${frameCount} frame${
-        frameCount > 1 ? "s" : ""
-      } while answering: ${input}`,
-      confidence: 0.85,
-    };
-  }
-
-  return result;
+  return {
+    detectedIntent: mode,
+    sceneSummary: "Backend response received.",
+    explanation: backendAnswer,
+    observations: [
+      {
+        id: crypto.randomUUID(),
+        type: "task",
+        label: "Question processed",
+        description: `Input type: ${inputType}. Camera frames available: ${
+          recentCameraFrames?.length ?? 0
+        }`,
+        confidence: 1,
+      },
+    ],
+    suggestedActions: [],
+    memoryUpdate: "Asked backend a question through Spring Boot.",
+    confidence: 1,
+  };
 }
