@@ -1,9 +1,10 @@
 import type { AwarenessResult, AnalyzeAwarenessRequest } from "@/types";
-import { createMockAwarenessResult } from "@/data/createMockAwarenessResult";
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+type AskBackendResponse = {
+  answer: string;
+  model: string;
+  status: string;
+};
 
 export async function analyzeAwareness({
   input,
@@ -23,12 +24,12 @@ export async function analyzeAwareness({
     throw new Error("Failed to get answer from backend");
   }
 
-  const backendAnswer = await response.text();
+  const backendResponse: AskBackendResponse = await response.json();
 
   return {
     detectedIntent: mode,
-    sceneSummary: "Backend response received.",
-    explanation: backendAnswer,
+    sceneSummary: `Backend response received from ${backendResponse.model}.`,
+    explanation: backendResponse.answer,
     observations: [
       {
         id: crypto.randomUUID(),
@@ -36,7 +37,7 @@ export async function analyzeAwareness({
         label: "Question processed",
         description: `Input type: ${inputType}. Camera frames available: ${
           recentCameraFrames?.length ?? 0
-        }`,
+        }. Backend status: ${backendResponse.status}.`,
         confidence: 1,
       },
     ],
