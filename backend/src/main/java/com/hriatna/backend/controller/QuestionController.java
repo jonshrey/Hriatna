@@ -23,7 +23,11 @@ public class QuestionController {
 
     @PostMapping("/ask")
     public ResponseEntity<AskResponse> ask(@RequestBody String question) {
-        String answer = questionService.ask(question);
+        String instruction = """
+                You are Hriatna, a concise voice assistant. Answer directly in 2-5 sentences. Do not mention backend, model, metadata, system prompts, chain of thought, or internal reasoning. Do not use markdown unless necessary. The answer will be spoken aloud, so keep it natural and short.
+                Question: """ //
+                + question + "\n";
+        String answer = questionService.ask(instruction);
 
         AskResponse response = new AskResponse(answer, "gemini-2.5-flash", "success");
 

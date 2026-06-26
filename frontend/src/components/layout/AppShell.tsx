@@ -77,9 +77,7 @@ export default function AppShell() {
       });
       setResult(analysisResult);
 
-      speakText(
-        `${analysisResult.sceneSummary}. ${analysisResult.explanation}`,
-      );
+      speakText(` ${analysisResult.explanation}`);
       setHistory((prevHistory) => [
         {
           id: Date.now().toString(),
