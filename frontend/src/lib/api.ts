@@ -4,6 +4,12 @@ type AskBackendResponse = {
   answer: string;
   model: string;
   status: string;
+  latencyMs: number;
+};
+type AskBackendErrorResponse = {
+  status: string;
+  message: string;
+  code: string;
 };
 
 export async function analyzeAwareness({
@@ -25,7 +31,10 @@ export async function analyzeAwareness({
   });
 
   if (!response.ok) {
-    throw new Error("Failed to get answer from backend");
+    const errorResponse: AskBackendErrorResponse = await response.json();
+    throw new Error(
+      errorResponse.message || "Failed to get answer from backend",
+    );
   }
 
   const backendResponse: AskBackendResponse = await response.json();
@@ -41,7 +50,7 @@ export async function analyzeAwareness({
         label: "Question processed",
         description: `Input type: ${inputType}. Camera frames available: ${
           recentCameraFrames?.length ?? 0
-        }. Backend status: ${backendResponse.status}.`,
+        }. Backend status: ${backendResponse.status}. Latency: ${backendResponse.latencyMs} ms.`,
         confidence: 1,
       },
     ],
