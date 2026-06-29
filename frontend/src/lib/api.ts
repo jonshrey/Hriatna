@@ -15,9 +15,13 @@ export async function analyzeAwareness({
   const response = await fetch("http://localhost:8080/api/ask", {
     method: "POST",
     headers: {
-      "Content-Type": "text/plain",
+      "Content-Type": "application/json",
     },
-    body: input,
+    body: JSON.stringify({
+      question: input,
+      mode,
+      inputType,
+    }),
   });
 
   if (!response.ok) {
