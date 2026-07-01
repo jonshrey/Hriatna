@@ -1,4 +1,4 @@
-package com.hriatna.backend.DTO;
+package com.hriatna.backend.dto;
 
 public record ErrorResponse(
         String status,

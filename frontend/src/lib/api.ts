@@ -17,6 +17,7 @@ export async function analyzeAwareness({
   mode,
   inputType,
   recentCameraFrames,
+  messages,
 }: AnalyzeAwarenessRequest): Promise<AwarenessResult> {
   const response = await fetch("http://localhost:8080/api/ask", {
     method: "POST",
@@ -27,6 +28,11 @@ export async function analyzeAwareness({
       question: input,
       mode,
       inputType,
+      messages: messages?.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+      recentCameraFrames,
     }),
   });
 
@@ -57,5 +63,6 @@ export async function analyzeAwareness({
     suggestedActions: [],
     memoryUpdate: "Asked backend a question through Spring Boot.",
     confidence: 1,
+    latencyMs: backendResponse.latencyMs,
   };
 }

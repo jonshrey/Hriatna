@@ -5,7 +5,7 @@ import speakText, { stopSpeaking } from "@/lib/speech";
 import type {
   AnalysisMode,
   AwarenessResult,
-  HistoryItem,
+  ChatMessage,
   InputType,
 } from "@/types";
 import ResultPanel from "./ResultPanel";
@@ -17,16 +17,18 @@ export default function AppShell() {
   const [input, setInput] = useState("");
   const [selectedMode, setSelectedMode] = useState<AnalysisMode>("auto");
   const [result, setResult] = useState<AwarenessResult | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionMemory, setSessionMemory] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [recentCameraFrames, setRecentCameraFrames] = useState<string[]>([]);
   const [inputType, setInputType] = useState<InputType>("text");
+
   return (
     <div className="grid grid-cols-[260px_1fr_300px] h-screen w-screen overflow-hidden font-sans">
       {/* 1. LEFT SIDEBAR */}
-      <Sidebar history={history} />
+      <Sidebar messages={messages} />
+
       {/* 2. CENTER MAIN SCREEN */}
       <MainWorkspace
         input={input}
@@ -41,6 +43,7 @@ export default function AppShell() {
         onTranscriptChange={(transcript) => setInput(transcript)}
         onCameraFrameCapture={handleCameraFrameCapture}
       />
+
       {/* 3. RIGHT PANEL */}
       <ResultPanel
         result={result}
@@ -52,6 +55,7 @@ export default function AppShell() {
 
   async function buttonClick() {
     const trimmedInput = input.trim();
+
     console.log(
       "Recent camera frames exist:",
       Boolean(recentCameraFrames.length),
@@ -61,55 +65,71 @@ export default function AppShell() {
       return;
     }
 
+    const mode: AnalysisMode =
+      selectedMode === "auto" ? "surrounding" : selectedMode;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: trimmedInput,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((previousMessages) => [...previousMessages, userMessage]);
+
     setIsLoading(true);
     setErrorMessage(null);
+    stopSpeaking();
 
     try {
-      const mode: AnalysisMode =
-        selectedMode === "auto" ? "surrounding" : selectedMode;
-
       const analysisResult = await analyzeAwareness({
         input: trimmedInput,
         mode,
         inputType,
         recentCameraFrames:
           recentCameraFrames.length > 0 ? recentCameraFrames : undefined,
+        messages,
       });
+
       setResult(analysisResult);
 
-      speakText(` ${analysisResult.explanation}`);
-      setHistory((prevHistory) => [
-        {
-          id: Date.now().toString(),
-          input: createHistoryTitle(trimmedInput),
-          mode: mode,
-          summary: analysisResult.sceneSummary,
-          createdAt: new Date().toISOString(),
-        },
-        ...prevHistory,
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: analysisResult.explanation,
+        latencyMs: analysisResult.latencyMs,
+        createdAt: new Date().toISOString(),
+      };
+
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        assistantMessage,
       ]);
 
-      setSessionMemory((prevMemory) => [
+      speakText(analysisResult.explanation);
+
+      setSessionMemory((previousMemory) => [
         analysisResult.memoryUpdate,
-        ...prevMemory,
+        ...previousMemory,
       ]);
 
       setInput("");
     } catch (error) {
       console.error("Failed to analyze awareness:", error);
+
       setErrorMessage(
-        "Something went wrong while analyzing. Please try again.",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while analyzing. Please try again.",
       );
     } finally {
       setIsLoading(false);
     }
   }
-  function createHistoryTitle(input: string) {
-    return input.length > 45 ? `${input.slice(0, 45)}...` : input;
-  }
+
   function handleCameraFrameCapture(frameDataUrl: string) {
-    setRecentCameraFrames((prevFrames) =>
-      [frameDataUrl, ...prevFrames].slice(0, 5),
+    setRecentCameraFrames((previousFrames) =>
+      [frameDataUrl, ...previousFrames].slice(0, 5),
     );
   }
 }

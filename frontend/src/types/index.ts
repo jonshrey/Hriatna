@@ -32,6 +32,14 @@ export interface Observation {
   confidence: number;
 }
 
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+  latencyMs?: number;
+}
+
 export interface SuggestedAction {
   id: string;
   title: string;
@@ -47,6 +55,7 @@ export interface AwarenessResult {
   suggestedActions: SuggestedAction[];
   memoryUpdate: string;
   confidence: number;
+  latencyMs?: number;
 }
 
 export interface AnalyzeAwarenessRequest {
@@ -54,6 +63,7 @@ export interface AnalyzeAwarenessRequest {
   mode: AnalysisMode;
   inputType: InputType;
   recentCameraFrames?: string[];
+  messages?: ChatMessage[];
 }
 
 export interface HistoryItem {
@@ -61,5 +71,7 @@ export interface HistoryItem {
   input: string;
   mode: AnalysisMode;
   summary: string;
+  answer: string;
+  latencyMs?: number;
   createdAt: string;
 }
